@@ -1,17 +1,18 @@
-#!/bin/bash -e
+#!/usr/bin/env bash
+set -euo pipefail
 
 #
 # Simple script that can talk to the JobServer and understand data sent back to it
 #
-RS=$'\x1e'  # ASCII "record separator"
+RS=$'\x1e'  # ASCII 30 "record separator" single char
 done=false
 
 exec 3<> /dev/tcp/localhost/12345                        # Open the socket to the JobServer
 printf "%s" "$@" >&3                                     # Write all supplied arguments
 while read -r line <&3; do                               # Now read in a loop until the socket closes
     case "$line" in
-    ${RS}L*)                                             # logging, so print to stdout
-        printf "%s\n" "${line#??}"
+    ${RS}L*)                                             # logging, so print to stdout (minus first 2 chars)
+        printf "%s\\n" "${line#??}"
         ;;
     ${RS}C*)                                             # control, so examine the command
         case "${line#??}" in
@@ -19,15 +20,15 @@ while read -r line <&3; do                               # Now read in a loop un
             done=true
             ;;
         FAIL!)
-            printf "Something failed\n"
+            printf "Something failed\\n"
             ;;
         *)
-            printf "Unknown command '%s'\n" "${line#??}"
+            printf "Unknown command '%s'\\n" "${line#??}"
             ;;
         esac
         ;;
     *)
-        printf "Unknown response: '%s'\n" "$line"
+        printf "Unknown response: '%s'\\n" "$line"
         ;;
     esac
 done

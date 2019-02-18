@@ -21,18 +21,18 @@ import org.slf4j.Logger;
 interface JobServerWorker {
 
     /**
-     * Identity method
+     * Identity method.
      *
      * @return the name for this instance
      */
     String getName();
 
     /**
-     * Contain's one's business logic
+     * Method that would contain one's business logic.
      *
      * @param clientLog a logger that writes back to the client that called us
-     * @return Return true is all work has completed, else false and we will re-schedule again
-     * @throws Exception is we want to abort the client processing
+     * @return true if all work has completed, else false (and we will be rescheduled again)
+     * @throws Exception to abort the client processing
      */
     boolean doWork(Logger clientLog) throws Exception;
 

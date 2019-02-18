@@ -36,17 +36,23 @@ import java.net.InetSocketAddress;
 import java.util.Timer;
 import java.util.TimerTask;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 
 /**
- * Simple socket listening server, that takes in a string payload containing a filename, and periodically watches for
- * that file to appear.
+ * Simple socket listening server, that takes in a string payload and passes that to a JobServerWorker for execution via
+ * a ScheduledExecutorService. The Worker is expected to do something (normally short lived) and then "go to sleep"
+ * before repeating. The sleeping is implemented by re-scheduling the Worker back in the ScheduledExecutorService with a
+ * delay.
  * <p>
- * Once found it deletes the file and stops watching, replying back to the same socket with a fixed message.
+ * (In this demo, the client payload is assumed to be a local filename, and the Worker periodically watches for that
+ * file to appear, once found it deletes the file and stops watching, replying back to the client on the same socket
+ * with fixed messages.)
  * <p>
- * Can drive this with all sorts of tools, netcat, telnet, or even pure bash as protocol is very simple where first
- * character in every line data sent back is a magic protocol marker. See PROTO_* statics below for full list.
+ * N.B. One can drive this server with all sorts of tools, netcat, telnet, or even pure bash as protocol is very simple
+ * with the first character in every line of data sent back is a magic protocol marker. See PROTO_* statics in
+ * JobServerClientOutput for full list.
  * <p>
- * N.B. this only listens on localhost, so the lack of security is intentional!
+ * N.N.B. this only listens on localhost, so the lack of security is intentional! :-)
  */
 public class JobServer {
 
@@ -65,7 +71,7 @@ public class JobServer {
     /**
      * Starts the Daemon JobServer on localhost, defaults to port 12345
      *
-     * @param args ignored
+     * @param args (ignored)
      * @throws InterruptedException If the server was unable to complete startup/shutdown
      */
     public static void main(String[] args) throws InterruptedException {
@@ -81,6 +87,15 @@ public class JobServer {
             @Override
             public void run() {
                 LOG.info(EXECUTOR_SERVICE.toString());
+
+                // Peep at head of queue, and see if it has "fallen behind" due to us getting overloaded
+                final Runnable head = EXECUTOR_SERVICE.getQueue().peek();
+                if (head instanceof JobServerRunnable) {
+                    final long delay = ((JobServerRunnable) head).getScheduledFuture().getDelay(TimeUnit.SECONDS);
+                    if (delay < 1) {
+                        LOG.warn("Worker queue head has fallen {} seconds behind!", delay);
+                    }
+                }
             }
         }, 0, STATS_INTERVAL_SECONDS * 1000);
 
@@ -120,9 +135,10 @@ public class JobServer {
             try {
                 // Put incoming event onto work queue immediately
                 // N.B. Netty has a decode() pattern if we want a POJO here rather than raw bytes.
-                EXECUTOR_SERVICE.execute(new JobServerRunnable(EXECUTOR_SERVICE,
-                    new JobServerClientOutput(ctx),
-                    new JobServerMyBizLogic(WORK_INTERVAL_SECONDS, ((ByteBuf) msg).toString(CharsetUtil.UTF_8))));
+                EXECUTOR_SERVICE.execute(
+                    new JobServerRunnable(EXECUTOR_SERVICE,
+                        new JobServerClientOutput(ctx),
+                        new JobServerWorkerMyBizLogic(WORK_INTERVAL_SECONDS, ((ByteBuf) msg).toString(CharsetUtil.UTF_8))));
             } finally {
                 ReferenceCountUtil.release(msg);
             }

@@ -30,24 +30,25 @@ import java.util.Objects;
  * Demo business logic
  */
 @NotThreadSafe
-class JobServerMyBizLogic implements JobServerWorker {
+class JobServerWorkerMyBizLogic implements JobServerWorker {
 
     private int interval;
-    private String payload;
+    private String filename;
 
     /**
      * Constructor
      *
-     * @param payload the payload provided by the client
+     * @param interval The interval, in seconds, between each re-scheduled run
+     * @param filename The filename provided by the client
      */
-    JobServerMyBizLogic(final int interval, final String payload) {
+    JobServerWorkerMyBizLogic(final int interval, final String filename) {
         this.interval = interval;
-        this.payload = Objects.requireNonNull(payload);
+        this.filename = Objects.requireNonNull(filename);
     }
 
     @Override
     public String getName() {
-        return payload;
+        return filename;
     }
 
     @Override
@@ -58,11 +59,11 @@ class JobServerMyBizLogic implements JobServerWorker {
             //
 
             // Check if the file exists
-            clientLog.info("Checking for {}", payload);
-            Path path = Paths.get(payload);
+            clientLog.info("Checking for {}", filename);
+            Path path = Paths.get(filename);
             if (Files.exists(path) && Files.isRegularFile(path)) {
                 // Delete it - this is our "work" we have been waiting to do
-                clientLog.info("Found file '{}', deleting it and sending reply to calling client", payload);
+                clientLog.info("Found file '{}', deleting it and sending reply to calling client", filename);
                 Files.delete(path);
                 return true;
             }
