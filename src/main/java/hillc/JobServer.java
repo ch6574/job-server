@@ -35,6 +35,7 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.util.Timer;
 import java.util.TimerTask;
+import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.ScheduledThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 
@@ -90,10 +91,10 @@ public class JobServer {
 
                 // Peep at head of queue, and see if it has "fallen behind" due to us getting overloaded
                 final Runnable head = EXECUTOR_SERVICE.getQueue().peek();
-                if (head instanceof JobServerRunnable) {
-                    final long delay = ((JobServerRunnable) head).getScheduledFuture().getDelay(TimeUnit.SECONDS);
-                    if (delay < 1) {
-                        LOG.warn("Worker queue head has fallen {} seconds behind!", delay);
+                if (head instanceof ScheduledFuture) {
+                    final long delay = ((ScheduledFuture) head).getDelay(TimeUnit.SECONDS);
+                    if (delay < 0) {
+                        LOG.warn("Worker queue head has fallen {} seconds behind!", -delay);
                     }
                 }
             }

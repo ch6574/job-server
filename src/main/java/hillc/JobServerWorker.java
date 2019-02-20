@@ -37,6 +37,11 @@ interface JobServerWorker {
     boolean doWork(Logger clientLog) throws Exception;
 
     /**
+     * @return The return code to be passed back to the client
+     */
+    int getReturnCode();
+
+    /**
      * @return The interval, in seconds, between each re-scheduled run
      */
     int getRescheduleInterval();

@@ -5,7 +5,7 @@ set -euo pipefail
 # Simple script that can talk to the JobServer and understand data sent back to it
 #
 RS=$'\x1e'  # ASCII 30 "record separator" single char
-done=false
+returnCode=-1
 
 exec 3<> /dev/tcp/localhost/12345                        # Open the socket to the JobServer
 printf "%s" "$@" >&3                                     # Write all supplied arguments
@@ -16,11 +16,12 @@ while read -r line <&3; do                               # Now read in a loop un
         ;;
     ${RS}C*)                                             # control, so examine the command
         case "${line#??}" in
-        DONE!)
-            done=true
+        DONE!*)
+            returnCode="${line##*!}"                    # everything after the '!'
             ;;
-        FAIL!)
+        FAIL!*)
             printf "Something failed\\n"
+            returnCode="${line##*!}"                    # everything after the '!'
             ;;
         *)
             printf "Unknown command '%s'\\n" "${line#??}"
@@ -33,9 +34,4 @@ while read -r line <&3; do                               # Now read in a loop un
     esac
 done
 
-# Determine return code
-if [[ "$done" = true ]]; then
-    exit 0
-else
-    exit 1
-fi
+exit $returnCode

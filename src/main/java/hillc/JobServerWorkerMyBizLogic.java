@@ -34,6 +34,7 @@ class JobServerWorkerMyBizLogic implements JobServerWorker {
 
     private int interval;
     private String filename;
+    private int returnCode = 1; // default return code
 
     /**
      * Constructor
@@ -65,6 +66,8 @@ class JobServerWorkerMyBizLogic implements JobServerWorker {
                 // Delete it - this is our "work" we have been waiting to do
                 clientLog.info("Found file '{}', deleting it and sending reply to calling client", filename);
                 Files.delete(path);
+
+                returnCode = 0;
                 return true;
             }
         } catch (IOException | InvalidPathException e) {
@@ -73,6 +76,11 @@ class JobServerWorkerMyBizLogic implements JobServerWorker {
         }
 
         return false; // By default we re-schedule ourselves
+    }
+
+    @Override
+    public int getReturnCode() {
+        return returnCode;
     }
 
     @Override

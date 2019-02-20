@@ -124,7 +124,7 @@ class JobServerRunnable implements Runnable {
         try {
             if (jobServerWorker.doWork(clientLog)) {
                 // All done! Notify the client and close the socket
-                jobServerClientOutput.sendDone();
+                jobServerClientOutput.sendDone(jobServerWorker.getReturnCode());
             } else {
                 // Reschedule ourselves again in future, ensure this is the last thing we do else we need Worker thread safety
                 scheduledFuture = scheduledThreadPoolExecutor.schedule(this, jobServerWorker.getRescheduleInterval(), TimeUnit.SECONDS);
@@ -133,7 +133,7 @@ class JobServerRunnable implements Runnable {
             LOG.error("Problem with processing, failing for: {}", jobServerWorker.getName(), e);
 
             // Notify the client, and close the socket
-            jobServerClientOutput.sendFail();
+            jobServerClientOutput.sendFail(jobServerWorker.getReturnCode());
         }
     }
 

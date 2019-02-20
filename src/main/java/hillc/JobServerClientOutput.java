@@ -19,15 +19,17 @@ class JobServerClientOutput {
      * The wire protocol this server talks back to clients
      */
     static class Protocol {
-        static final String REPLY_DONE = "DONE!\n"; // Client response once work is done
-        static final String REPLY_FAIL = "FAIL!\n"; // Client response should work fail!
-
         // ASCII protocol prefixes
         // Protocol is simply <start of line><RS><control char><... body><\n>
-        // e.g. a log line would be "_Lmy log text\n" where _ is ascii 30 and \n is a newline
+        // e.g. a log line would be     "_Lmy log text\n" where _ is ascii 30 and \n is a newline
+        // e.g. a control line would be "_CDONE!0\n"      where _ is ascii 30 and \n is a newline
         static final char RECORD_SEPARATOR = 30;
         static final String PROTO_LOG = RECORD_SEPARATOR + "L";
         static final String PROTO_CTRL = RECORD_SEPARATOR + "C";
+        static final char LINE_ENDING = '\n';
+
+        static final String REPLY_DONE = "DONE!"; // Client response once work is done
+        static final String REPLY_FAIL = "FAIL!"; // Client response should work fail!
     }
 
     private final ChannelHandlerContext ctx;
@@ -87,17 +89,21 @@ class JobServerClientOutput {
 
     /**
      * Sends the terminal "DONE!" event to the client and closes the socket
+     *
+     * @param returnCode The return code to be passed back to the client
      */
-    void sendDone() {
-        ctx.writeAndFlush(Unpooled.copiedBuffer(Protocol.PROTO_CTRL + Protocol.REPLY_DONE, CharsetUtil.UTF_8))
+    void sendDone(int returnCode) {
+        ctx.writeAndFlush(Unpooled.copiedBuffer(Protocol.PROTO_CTRL + Protocol.REPLY_DONE + returnCode + Protocol.LINE_ENDING, CharsetUtil.UTF_8))
             .addListener(ChannelFutureListener.CLOSE);
     }
 
     /**
      * Sends the terminal "FAIL!" event to the client and closes the socket
+     *
+     * @param returnCode The return code to be passed back to the client
      */
-    void sendFail() {
-        ctx.writeAndFlush(Unpooled.copiedBuffer(Protocol.PROTO_CTRL + Protocol.REPLY_FAIL, CharsetUtil.UTF_8))
+    void sendFail(int returnCode) {
+        ctx.writeAndFlush(Unpooled.copiedBuffer(Protocol.PROTO_CTRL + Protocol.REPLY_FAIL + returnCode + Protocol.LINE_ENDING, CharsetUtil.UTF_8))
             .addListener(ChannelFutureListener.CLOSE);
     }
 }
