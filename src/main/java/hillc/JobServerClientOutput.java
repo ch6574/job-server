@@ -1,3 +1,9 @@
+/*******************************************************************************
+ * Copyright (c) 2018, Christopher Hill <ch6574@gmail.com>
+ * GNU General Public License v3.0+ (see https://www.gnu.org/licenses/gpl-3.0.txt)
+ * SPDX-License-Identifier: GPL-3.0-or-later
+ ******************************************************************************/
+
 package hillc;
 
 import io.netty.buffer.Unpooled;
@@ -94,7 +100,7 @@ class JobServerClientOutput {
      */
     void sendDone(int returnCode) {
         ctx.writeAndFlush(Unpooled.copiedBuffer(Protocol.PROTO_CTRL + Protocol.REPLY_DONE + returnCode + Protocol.LINE_ENDING, CharsetUtil.UTF_8))
-            .addListener(ChannelFutureListener.CLOSE);
+                .addListener(ChannelFutureListener.CLOSE);
     }
 
     /**
@@ -104,6 +110,6 @@ class JobServerClientOutput {
      */
     void sendFail(int returnCode) {
         ctx.writeAndFlush(Unpooled.copiedBuffer(Protocol.PROTO_CTRL + Protocol.REPLY_FAIL + returnCode + Protocol.LINE_ENDING, CharsetUtil.UTF_8))
-            .addListener(ChannelFutureListener.CLOSE);
+                .addListener(ChannelFutureListener.CLOSE);
     }
 }

@@ -1,25 +1,15 @@
 /*******************************************************************************
- * Copyright (C) 2018, Christopher Hill <ch6574@gmail.com>
- *
- * This program is free software: you can redistribute it and/or modify
- * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *******************************************************************************/
+ * Copyright (c) 2018, Christopher Hill <ch6574@gmail.com>
+ * GNU General Public License v3.0+ (see https://www.gnu.org/licenses/gpl-3.0.txt)
+ * SPDX-License-Identifier: GPL-3.0-or-later
+ ******************************************************************************/
 package hillc;
 
 import ch.qos.logback.classic.LoggerContext;
 import ch.qos.logback.classic.encoder.PatternLayoutEncoder;
 import ch.qos.logback.classic.spi.ILoggingEvent;
 import ch.qos.logback.core.OutputStreamAppender;
+import hillc.JobServerClientOutput.Protocol;
 import net.jcip.annotations.ThreadSafe;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,8 +19,6 @@ import java.util.Objects;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
-
-import hillc.JobServerClientOutput.Protocol;
 
 /**
  * The runnable object that lives in the ExecutorService's work queue. Client output and Worker logic provided at
@@ -118,7 +106,7 @@ class JobServerRunnable implements Runnable {
         // (Re)attach this thread's special Logger+Appender to our instance's OutputStream
         // N.B. No need to buffer this as OutputStreamAppender flushes whole lines at once
         final ch.qos.logback.classic.Logger clientLog = CLIENT_LOGGER.get();
-        ((OutputStreamAppender) clientLog.getAppender(localName())).setOutputStream(jobServerClientOutput.getOs());
+        ((OutputStreamAppender<?>) clientLog.getAppender(localName())).setOutputStream(jobServerClientOutput.getOs());
 
         // Now do the worker logic
         try {

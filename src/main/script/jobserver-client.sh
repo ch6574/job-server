@@ -1,4 +1,9 @@
 #!/usr/bin/env bash
+################################################################################
+# Copyright (c) 2018, Christopher Hill <ch6574@gmail.com>
+# GNU General Public License v3.0+ (see https://www.gnu.org/licenses/gpl-3.0.txt)
+# SPDX-License-Identifier: GPL-3.0-or-later
+################################################################################
 set -euo pipefail
 
 #
@@ -34,4 +39,4 @@ while read -r line <&3; do                               # Now read in a loop un
     esac
 done
 
-exit $returnCode
+exit "$returnCode"
